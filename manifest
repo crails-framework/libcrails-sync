@@ -1,0 +1,12 @@
+: 1
+name: libcrails-sync
+version: 2.0.0
+summary: websocket based client/server synchronization for the crails framework
+license: BSD-3-Clause
+description-file: README.md
+url: https://github.com/crails-framework/libcrails-sync.git
+email: michael@unetresgrossebite.com
+#build-error-email: michael@unetresgrossebite.com
+depends: * build2 >= 0.15.0
+depends: * bpkg >= 0.15.0
+depends: { libcrails libcrails-renderer libcrails-random libcrails-http-client } ^2.0.0
