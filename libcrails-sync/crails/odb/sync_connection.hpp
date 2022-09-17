@@ -59,7 +59,7 @@ namespace Crails
         }
 
         bool use_sync_transaction = true;
-        Crails::::Sync::Transaction sync_transaction;
+        Crails::Sync::Transaction sync_transaction;
       };
     }
   }

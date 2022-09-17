@@ -4,6 +4,7 @@
 # include <crails/datatree.hpp>
 # include <crails/shared_vars.hpp>
 # include <crails/renderer.hpp>
+# include <crails/logger.hpp>
 # include <boost/lexical_cast.hpp>
 # include "channel.hpp"
 
@@ -40,9 +41,18 @@ namespace Crails
 
           params["headers"]["Accept"] = "application/json";
           vars["model"] = &object;
-          Crails::Renderer::render(T::view, params.as_data(), result, vars);
-          data[uid()] = result.value();
+          try
+          {
+            Crails::Renderer::render(T::view, params.as_data(), result, vars);
+            data[uid()] = result.value();
+            return ;
+          }
+          catch (const Crails::MissingTemplate& error)
+          {
+            logger << Logger::Error << "Crails::Sync::Update: missing template: " << error.what() << Logger::endl;
+          }
         }
+        object.merge_data(data[uid()]);
       }
     };
 
