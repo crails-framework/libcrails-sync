@@ -14,6 +14,8 @@ namespace Crails
     public:
       enum ClientMode { ReadMode, WriteMode, ReadWriteMode };
 
+      Channel(const std::string& name) : name(name) {}
+
       std::mutex& mutex() { return object_mutex; }
       void add_listener(Listener& listener);
       void remove_listener(Listener& listener);
@@ -24,6 +26,7 @@ namespace Crails
       std::size_t count() const;
 
     private:
+      const std::string name;
       std::mutex object_mutex;
       std::list<std::shared_ptr<Listener>> listeners;
       std::string read_password, write_password;
@@ -38,23 +41,6 @@ namespace Crails
     private:
       Channel& channel;
       mutable bool owner = true;
-    };
-
-    class Channels
-    {
-      SINGLETON(Channels)
-    public:
-      ~Channels();
-
-      Channel& require_unlocked_channel(const std::string& key);
-      ChannelHandle require_channel(const std::string& key) { return require_unlocked_channel(key); }
-      void broadcast(const std::string& key, const std::string& message);
-      void cleanup();
-      void cleanup(const std::string& key);
-
-    private:
-      std::mutex channels_mutex;
-      std::map<std::string, Channel*> channels;
     };
   }
 }

@@ -1,7 +1,7 @@
 #ifndef  CRAILS_SYNC_CHANNEL_CLIENT_HPP
 # define CRAILS_SYNC_CHANNEL_CLIENT_HPP
 
-# include "channel.hpp"
+# include "channels.hpp"
 
 namespace Crails
 {
@@ -21,6 +21,8 @@ namespace Crails
     class ChannelClient : public ChannelListener
     {
     public:
+      ChannelClient(Crails::Context& context, const std::string& channel_name) : ChannelListener(context, channel_name) {}
+
       static bool  acceptable(Crails::Context& context, ChannelHandle& channel);
       virtual void received(const std::string& message, MessageType type) override;
     };

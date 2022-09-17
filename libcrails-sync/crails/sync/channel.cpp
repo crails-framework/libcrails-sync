@@ -1,66 +1,12 @@
 #include "channel.hpp"
+#include <crails/logger.hpp>
 
 using namespace Crails::Sync;
 using namespace std;
 
-/*
- * Channels
- */
-Channels::~Channels()
-{
-  for (auto entry : channels)
-    delete entry.second;
-}
-
-Channel& Channels::require_unlocked_channel(const string& key)
-{
-  lock_guard<mutex> mutex_lock(channels_mutex);
-  auto it = channels.find(key);
-
-  if (it == channels.end())
-    it = channels.emplace(key, new Channel).first;
-  return *(it->second);
-}
-
-void Channels::broadcast(const string& key, const string& message)
-{
-  require_channel(key)->broadcast(message);
-}
-
-static std::map<std::string, Channel*>::iterator cleanup_channel_if_empty(std::map<std::string, Channel*>& channels, std::map<std::string, Channel*>::iterator it)
-{
-  ChannelHandle handle(*it->second);
-
-  if (handle->count() == 0)
-  {
-    delete it->second;
-    return channels.erase(it);
-  }
-  return ++it;
-}
-
-void Channels::cleanup()
-{
-  lock_guard<mutex> mutex_lock(channels_mutex);
-
-  for (auto it = channels.begin() ; it != channels.end();)
-    it = cleanup_channel_if_empty(channels, it);
-}
-
-void Channels::cleanup(const std::string& key)
-{
-  lock_guard<mutex> mutex_lock(channels_mutex);
-  auto it = channels.find(key);
-
-  if (it != channels.end())
-    cleanup_channel_if_empty(channels, it);
-}
-
-/*
- * Channel
- */
 void Channel::add_listener(Listener& listener)
 {
+  Crails::logger << Crails::Logger::Debug << "Channel `" << name << "` has a new listener." << Crails::Logger::endl;
   listeners.push_back(listener.shared_from_this());
 }
 
@@ -73,6 +19,7 @@ void Channel::remove_listener(Listener& listener)
 
 void Channel::broadcast(const string& message)
 {
+  Crails::logger << Crails::Logger::Debug << "Channel `" << name << "` broadcasting to " << listeners.size() << " listeners." << Crails::Logger::endl;
   for (auto it = listeners.begin() ; it != listeners.end() ; ++it)
     (*it)->send(message);
 }

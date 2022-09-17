@@ -1,5 +1,7 @@
 #include "transaction.hpp"
+#include <crails/logger.hpp>
 
+using namespace Crails;
 using namespace Crails::Sync;
 using namespace std;
 
@@ -31,9 +33,18 @@ void Transaction::commit()
     message["removals"].from_vector<string>(removal_uids);
     if (on_commit)
       on_commit(message);
-    channel->broadcast(message.to_json());
+    {
+      lock_guard<mutex> lock(channel->mutex());
+
+      channel->broadcast(message.to_json());
+    }
     rollback();
+    logger << Logger::Debug << "Crails::Sync::Transaction::commit: successfully broadcasted sync udpate" << Logger::endl;
   }
+  else if (!channel)
+    logger << Logger::Debug << "Crails::Sync::Transaction::commit: no channel specified" << Logger::endl;
+  else
+    logger << Logger::Debug << "Crails::Sync::Transaction::commit: nothing to commit" << Logger::endl;
 }
 
 void Transaction::rollback()

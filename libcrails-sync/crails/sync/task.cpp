@@ -1,5 +1,5 @@
 #include "task.hpp"
-#include "channel.hpp"
+#include "channels.hpp"
 #include <crails/utils/random_string.hpp>
 #include <crails/client.hpp>
 
