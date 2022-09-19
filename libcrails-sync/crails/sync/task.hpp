@@ -32,6 +32,8 @@ namespace Crails
       ~Task();
 
       std::string uri() const { return scope + '/' + id; }
+      const std::string& get_scope() const { return scope; }
+      const std::string& get_id() const { return id; }
       void set_task_count(unsigned int);
       unsigned int notification_step() const;
       void increment(unsigned int progress = 1);

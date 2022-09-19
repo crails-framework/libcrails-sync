@@ -9,9 +9,9 @@
   { Crails::Sync::ChannelRoute<websocket>::trigger(context, callback); })
 
 # define match_sync_task(path) \
-  match("POST", path, [](Crails::Context& context, std::function<void()> callback)) \
-  { Crails::Sync::BroadcastRoute::trigger(context, callback); } \
-  match_sync_channel(path, ChannelListener)
+  match("POST", path, [](Crails::Context& context, std::function<void()> callback) \
+  { Crails::Sync::BroadcastRoute::trigger(context, callback); }) \
+ .match_sync_channel(path, Crails::Sync::ChannelListener)
 
 namespace Crails
 {

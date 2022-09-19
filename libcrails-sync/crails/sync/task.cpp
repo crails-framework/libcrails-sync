@@ -2,7 +2,9 @@
 #include "channels.hpp"
 #include <crails/utils/random_string.hpp>
 #include <crails/client.hpp>
+#include <crails/logger.hpp>
 
+using namespace Crails;
 using namespace Crails::Sync;
 using namespace std;
 
@@ -11,8 +13,17 @@ static std::string random_task_id() { return Crails::generate_random_string("abc
 template<typename CLIENT_TYPE>
 static void broadcast(const Crails::HttpRequest& request)
 {
-  CLIENT_TYPE(Task::Settings::hostname, Task::Settings::port)
-    .query(request);
+  try
+  {
+    CLIENT_TYPE http(Task::Settings::hostname, Task::Settings::port);
+
+    http.connect();
+    http.query(request);
+  }
+  catch (const std::exception& error)
+  {
+    logger << Logger::Error << "Crails::Sync::Task: an error occured during a broadcast to " << Task::Settings::hostname << ':' << Task::Settings::port << ": " << error.what() << Logger::endl;
+  }
 }
 
 static void broadcast(Task& task)
