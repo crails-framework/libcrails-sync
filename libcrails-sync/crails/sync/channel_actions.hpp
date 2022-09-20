@@ -53,6 +53,7 @@ namespace Crails
 
         if (!try_to_broadcast(context, channels, channel_name))
           channels->cleanup(channel_name);
+        context.response.send();
         callback();
       }
 
@@ -63,7 +64,12 @@ namespace Crails
         std::size_t   listener_count = channel->count();
 
         if (ChannelClient::acceptable(context, channel) && listener_count)
+        {
+          context.response.set_status_code(Crails::HttpStatus::ok);
           channel->broadcast(context.connection->get_request().body());
+        }
+        else
+          context.response.set_status_code(Crails::HttpStatus::forbidden);
         return listener_count == 0;
       }
     };

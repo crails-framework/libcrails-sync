@@ -19,6 +19,7 @@ static void broadcast(const Crails::HttpRequest& request)
 
     http.connect();
     http.query(request);
+    logger << Logger::Debug << "Crails::Sync::Task: broadcasted progress update" << Logger::endl;
   }
   catch (const std::exception& error)
   {
@@ -28,9 +29,11 @@ static void broadcast(const Crails::HttpRequest& request)
 
 static void broadcast(Task& task)
 {
-  Crails::HttpRequest request{Crails::HttpVerb::post, task.uri(), 1.1};
+  Crails::HttpRequest request{Crails::HttpVerb::post, '/' + task.uri(), 11};
 
+  request.set(Crails::HttpHeader::content_type, "application/json");
   request.body() = task.metadata.to_json();
+  request.content_length(request.body().length());
   if (Task::Settings::ssl)
     broadcast<Crails::Ssl::Client>(request);
   else
@@ -59,8 +62,6 @@ Task::~Task()
 {
   if (task_count > task_progress)
   {
-    auto channel = Channels::singleton::get()->require_channel(scope);
-
     metadata["status"] = "abort";
     broadcast(*this);
   }
@@ -89,8 +90,6 @@ void Task::notify(const std::string& message)
 void Task::notify()
 {
   float progress = task_progress;
-  auto channel = Channels::singleton::get()->require_channel(scope);
-
   progress /= task_count;
   if (progress > 1)
     progress = 1;

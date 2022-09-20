@@ -10,12 +10,11 @@ namespace Crails
   {
     class Task
     {
-      const unsigned int notification_step_perc = 5;
-
       std::string  scope, id;
       unsigned int last_notification = 0;
       unsigned int task_progress     = 0;
       unsigned int task_count        = 1;
+      unsigned int notification_step_perc = 5;
     public:
       DataTree     metadata;
 
@@ -29,12 +28,14 @@ namespace Crails
       Task(unsigned int task_count);
       Task(const std::string& scope, unsigned int task_count);
       Task(const std::string& scope, const std::string& id, unsigned int task_count);
+      Task(const Task&) = delete;
       ~Task();
 
       std::string uri() const { return scope + '/' + id; }
       const std::string& get_scope() const { return scope; }
       const std::string& get_id() const { return id; }
       void set_task_count(unsigned int);
+      void set_notification_step(unsigned int value) { notification_step_perc = value; }
       unsigned int notification_step() const;
       void increment(unsigned int progress = 1);
       void notify();
