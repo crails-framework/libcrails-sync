@@ -15,11 +15,16 @@ static void broadcast(const Crails::HttpRequest& request)
 {
   try
   {
-    CLIENT_TYPE http(Task::Settings::hostname, Task::Settings::port);
+    auto http = make_shared<CLIENT_TYPE>(Task::Settings::hostname, Task::Settings::port);
 
-    http.connect();
-    http.query(request);
-    logger << Logger::Debug << "Crails::Sync::Task: broadcasted progress update" << Logger::endl;
+    http->connect();
+    http->async_query(request, [http](const HttpResponse&, boost::beast::error_code ec)
+    {
+      if (ec)
+        logger << Logger::Error << "Crails::Sync::Task: an error occured during a broadcast: " << ec.message() << Logger::endl;
+      else
+        logger << Logger::Debug << "Crails::Sync::Task: broadcasted progress update" << Logger::endl;
+    });
   }
   catch (const std::exception& error)
   {
@@ -32,6 +37,7 @@ static void broadcast(Task& task)
   Crails::HttpRequest request{Crails::HttpVerb::post, '/' + task.uri(), 11};
 
   request.set(Crails::HttpHeader::content_type, "application/json");
+  request.set(Crails::HttpHeader::connection, "close");
   request.body() = task.metadata.to_json();
   request.content_length(request.body().length());
   if (Task::Settings::ssl)
