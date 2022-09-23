@@ -2,6 +2,8 @@
 # define CRAILS_SYNC_CHANNELS_HPP
 
 # include <crails/utils/singleton.hpp>
+# include <map>
+# include <mutex>
 # include "channel.hpp"
 
 namespace Crails
