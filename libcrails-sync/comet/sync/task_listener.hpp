@@ -14,18 +14,20 @@ namespace Comet
     {
       typedef std::unique_ptr<Comet::WebSocket> WebSocketPtr;
 
-      std::string  scope, id;
-      float        progress = 0.f;
-      unsigned int task_count = 1;
-      unsigned int task_progress = 1;
-      WebSocketPtr socket;
+      std::string      scope, id;
+      float            progress = 0.f;
+      unsigned int     task_count = 1;
+      unsigned int     task_progress = 1;
+      WebSocketPtr     socket;
     public:
-      Signal<float> updated;
-      Signal<void>  finished;
+      Signal<float>    updated;
+      Signal<void>     finished, aborted;
+      Signal<DataTree> message_received;
 
       TaskListener(const std::string& scope, const std::string& id) : scope(scope), id(id), socket(new Comet::WebSocket(url()))
       {
         socket->message_received.connect(std::bind(&TaskListener::on_update_received, this, std::placeholders::_1));
+        socket->closed.connect([this]() { if (progress < 1.f) { aborted.trigger(); }});
       }
 
       std::string url() const
@@ -54,6 +56,7 @@ namespace Comet
         task_count    = metadata["item_count"];
         task_progress = metadata["item_progress"];
         updated.trigger(progress);
+        message_received.trigger(metadata);
         if (progress >= 1.f)
           finished.trigger();
       }
