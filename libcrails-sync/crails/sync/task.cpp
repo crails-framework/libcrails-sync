@@ -35,11 +35,14 @@ static void broadcast(const Crails::HttpRequest& request)
 static void broadcast(Task& task)
 {
   Crails::HttpRequest request{Crails::HttpVerb::post, '/' + task.uri(), 11};
+  string body = task.metadata.to_json();
+  char body_buffer[body.length()];
 
   request.set(Crails::HttpHeader::content_type, "application/json");
   request.set(Crails::HttpHeader::connection, "close");
-  request.body() = task.metadata.to_json();
-  request.content_length(request.body().length());
+  request.body().data = reinterpret_cast<void*>(body_buffer);
+  request.body().size = body.length();
+  request.content_length(body.length());
   if (Task::Settings::ssl)
     broadcast<Crails::Ssl::Client>(request);
   else
