@@ -11,14 +11,14 @@ using namespace std;
 static std::string random_task_id() { return Crails::generate_random_string("abcdefghijklmnopqrstuvwxyz0123456789", 8); }
 
 template<typename CLIENT_TYPE>
-static void broadcast(const Crails::HttpRequest& request)
+static void broadcast(const Crails::Client::Request& request)
 {
   try
   {
     auto http = make_shared<CLIENT_TYPE>(Task::Settings::hostname, Task::Settings::port);
 
     http->connect();
-    http->async_query(request, [http](const HttpResponse&, boost::beast::error_code ec)
+    http->async_query(request, [http](const Crails::Client::Response&, boost::beast::error_code ec)
     {
       if (ec)
         logger << Logger::Error << "Crails::Sync::Task: an error occured during a broadcast: " << ec.message() << Logger::endl;
@@ -34,14 +34,12 @@ static void broadcast(const Crails::HttpRequest& request)
 
 static void broadcast(Task& task)
 {
-  Crails::HttpRequest request{Crails::HttpVerb::post, '/' + task.uri(), 11};
-  string body = task.metadata.to_json();
-  char body_buffer[body.length()];
+  Crails::Client::Request request{Crails::HttpVerb::post, '/' + task.uri(), 11};
+  const string body = task.metadata.to_json();
 
   request.set(Crails::HttpHeader::content_type, "application/json");
   request.set(Crails::HttpHeader::connection, "close");
-  request.body().data = reinterpret_cast<void*>(body_buffer);
-  request.body().size = body.length();
+  request.body() = body;
   request.content_length(body.length());
   if (Task::Settings::ssl)
     broadcast<Crails::Ssl::Client>(request);
