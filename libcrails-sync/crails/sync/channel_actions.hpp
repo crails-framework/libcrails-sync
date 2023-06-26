@@ -48,17 +48,22 @@ namespace Crails
     public:
       static void trigger(Crails::Context& context, std::function<void()> callback)
       {
-        const std::string channel_name = context.params["uri"];
-        Channels*         channels = Channels::singleton::get();
+        auto self = context.shared_from_this();
 
-        if (!try_to_broadcast(context, channels, channel_name))
-          channels->cleanup(channel_name);
-        context.response.send();
-        callback();
+	context.connection->get_body([self, &context, callback](std::string_view body)
+        {
+          const std::string channel_name = context.params["uri"];
+          Channels*         channels = Channels::singleton::get();
+
+          if (!try_to_broadcast(context, channels, channel_name, body))
+            channels->cleanup(channel_name);
+          context.response.send();
+          callback();
+	});
       }
 
     private:
-      static bool try_to_broadcast(Crails::Context& context, Channels* channels, const std::string& channel_name)
+      static bool try_to_broadcast(Crails::Context& context, Channels* channels, const std::string& channel_name, std::string_view body)
       {
         ChannelHandle channel(channels->require_unlocked_channel(channel_name));
         std::size_t   listener_count = channel->count();
@@ -66,7 +71,7 @@ namespace Crails
         if (ChannelClient::acceptable(context, channel) && listener_count)
         {
           context.response.set_status_code(Crails::HttpStatus::ok);
-          channel->broadcast(context.connection->get_request().body());
+          channel->broadcast(body.data());
         }
         else
           context.response.set_status_code(Crails::HttpStatus::forbidden);

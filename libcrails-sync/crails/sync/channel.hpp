@@ -2,7 +2,6 @@
 # define CRAILS_SYNC_CHANNEL_HPP
 
 # include <crails/websocket.hpp>
-# include <crails/utils/singleton.hpp>
 
 namespace Crails
 {
