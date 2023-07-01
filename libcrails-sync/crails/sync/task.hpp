@@ -15,6 +15,7 @@ namespace Crails
       unsigned int task_progress     = 0;
       unsigned int task_count        = 1;
       unsigned int notification_step_perc = 5;
+      bool         mute = false;
     public:
       DataTree     metadata;
 
@@ -34,6 +35,8 @@ namespace Crails
       std::string uri() const { return scope + '/' + id; }
       const std::string& get_scope() const { return scope; }
       const std::string& get_id() const { return id; }
+      bool is_mute() const { return mute; }
+      void set_mute(bool value) { mute = value; }
       void set_task_count(unsigned int);
       void set_notification_step(unsigned int value) { notification_step_perc = value; }
       unsigned int notification_step() const;

@@ -34,17 +34,20 @@ static void broadcast(const Crails::Client::Request& request)
 
 static void broadcast(Task& task)
 {
-  Crails::Client::Request request{Crails::HttpVerb::post, '/' + task.uri(), 11};
-  const string body = task.metadata.to_json();
+  if (!task.is_mute())
+  {
+    Crails::Client::Request request{Crails::HttpVerb::post, '/' + task.uri(), 11};
+    const string body = task.metadata.to_json();
 
-  request.set(Crails::HttpHeader::content_type, "application/json");
-  request.set(Crails::HttpHeader::connection, "close");
-  request.body() = body;
-  request.content_length(body.length());
-  if (Task::Settings::ssl)
-    broadcast<Crails::Ssl::Client>(request);
-  else
-    broadcast<Crails::Client>(request);
+    request.set(Crails::HttpHeader::content_type, "application/json");
+    request.set(Crails::HttpHeader::connection, "close");
+    request.body() = body;
+    request.content_length(body.length());
+    if (Task::Settings::ssl)
+      broadcast<Crails::Ssl::Client>(request);
+    else
+      broadcast<Crails::Client>(request);
+  }
 }
 
 Task::Task(unsigned int task_count) : task_count(task_count)
