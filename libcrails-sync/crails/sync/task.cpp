@@ -39,6 +39,7 @@ static void broadcast(Task& task)
     Crails::Client::Request request{Crails::HttpVerb::post, '/' + task.uri(), 11};
     const string body = task.metadata.to_json();
 
+    logger << Logger::Debug << "Crails::Sync::Task: notify on " << task.get_id() << ":\n" << body << Logger::endl;
     request.set(Crails::HttpHeader::content_type, "application/json");
     request.set(Crails::HttpHeader::connection, "close");
     request.body() = body;
