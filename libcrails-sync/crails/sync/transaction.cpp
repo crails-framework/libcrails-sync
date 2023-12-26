@@ -14,6 +14,12 @@ namespace Crails
   }
 }
 
+Transaction& Transaction::get()
+{
+  static thread_local Transaction transaction;
+  return transaction;
+}
+
 bool Transaction::is_enabled()
 {
   return Sync::enabled;

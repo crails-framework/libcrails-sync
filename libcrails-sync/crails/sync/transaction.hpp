@@ -63,6 +63,7 @@ namespace Crails
       void     set_channel(Channel& value) { channel = &value; }
       Channel* get_channel() const { return channel; }
 
+      static Transaction& get();
       static bool is_enabled();
       static std::function<void (DataTree&)> on_commit;
 

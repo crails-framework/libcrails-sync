@@ -13,8 +13,10 @@ namespace Crails
       class Connection : public Odb::Connection
       {
       public:
-        Connection() : Odb::Connection()
+        Connection() : Odb::Connection(), sync_transaction(Crails::Sync::Transaction::get())
         {}
+
+        virtual ~Connection() {}
 
         void commit()
         {
@@ -59,7 +61,7 @@ namespace Crails
         }
 
         bool use_sync_transaction = true;
-        Crails::Sync::Transaction sync_transaction;
+        Crails::Sync::Transaction& sync_transaction;
       };
     }
   }
