@@ -3,6 +3,7 @@
 
 # include "channel_client.hpp"
 # include <crails/context.hpp>
+# include <crails/logger.hpp>
 
 # define match_sync_channel(path, websocket) \
   match("GET", path, [](Crails::Context& context, std::function<void()> callback) \
@@ -50,16 +51,18 @@ namespace Crails
       {
         auto self = context.shared_from_this();
 
-	context.connection->get_body([self, &context, callback](std::string_view body)
+        context.connection->get_body([self, &context, callback](std::string_view body)
         {
           const std::string channel_name = context.params["uri"];
           Channels*         channels = Channels::singleton::get();
+          bool              has_listeners;
 
-          if (!try_to_broadcast(context, channels, channel_name, body))
-            channels->cleanup(channel_name);
+          has_listeners = try_to_broadcast(context, channels, channel_name, body);
           context.response.send();
           callback();
-	});
+          if (!has_listeners)
+            channels->cleanup(channel_name);
+        });
       }
 
     private:
@@ -74,8 +77,12 @@ namespace Crails
           channel->broadcast(body.data());
         }
         else
+        {
+          logger << "Crails::Sync::BroadcastRoute: rejecting broadcast attempt on channel "
+                 << channel_name << " (" << listener_count << " listeners)" << Logger::endl;
           context.response.set_status_code(Crails::HttpStatus::forbidden);
-        return listener_count == 0;
+        }
+        return listener_count != 0;
       }
     };
   }
