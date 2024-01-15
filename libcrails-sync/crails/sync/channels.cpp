@@ -30,9 +30,16 @@ void Channels::broadcast(const string& key, const string& message)
 
 static std::map<std::string, Channel*>::iterator cleanup_channel_if_empty(std::map<std::string, Channel*>& channels, std::map<std::string, Channel*>::iterator it)
 {
-  ChannelHandle handle(*it->second);
+  int count;
 
-  if (handle->count() == 0)
+  {
+    ChannelHandle handle(*it->second);
+    count = handle->count();
+  }
+  // As channels_mutex should be locked when this function is run,
+  // it shouldn't be possible for the channel's own mutex to be locked
+  // from anywhere else, hence making it safe to delete the mutex:
+  if (count == 0)
   {
     delete it->second;
     return channels.erase(it);
