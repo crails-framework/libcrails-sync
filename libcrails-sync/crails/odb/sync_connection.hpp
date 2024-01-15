@@ -63,6 +63,15 @@ namespace Crails
         bool use_sync_transaction = true;
         Crails::Sync::Transaction& sync_transaction;
       };
+
+      class ConnectionHandle : public Crails::Odb::Sync::Connection
+      {
+      public:
+        ConnectionHandle()
+        {
+          rollback_on_destruction = false;
+        }
+      };
     }
   }
 }
