@@ -4,23 +4,23 @@
 using namespace Crails::Sync;
 using namespace std;
 
+typedef std::map<std::string, std::shared_ptr<Channel>> ChannelMap;
+
 /*
  * Channels
  */
 Channels::~Channels()
 {
-  for (auto entry : channels)
-    delete entry.second;
 }
 
-Channel& Channels::require_unlocked_channel(const string& key)
+shared_ptr<Channel> Channels::require_unlocked_channel(const string& key)
 {
   lock_guard<mutex> mutex_lock(channels_mutex);
   auto it = channels.find(key);
 
   if (it == channels.end())
-    it = channels.emplace(key, new Channel(key)).first;
-  return *(it->second);
+    it = channels.emplace(key, make_shared<Channel>(key)).first;
+  return it->second;
 }
 
 void Channels::broadcast(const string& key, const string& message)
@@ -28,21 +28,20 @@ void Channels::broadcast(const string& key, const string& message)
   require_channel(key)->broadcast(message);
 }
 
-static std::map<std::string, Channel*>::iterator cleanup_channel_if_empty(std::map<std::string, Channel*>& channels, std::map<std::string, Channel*>::iterator it)
+// Must be called with channels_mutex held.
+static ChannelMap::iterator cleanup_channel_if_empty(ChannelMap& channels, ChannelMap::iterator it)
 {
-  int count;
+  if (it->second.use_count() == 1)
+  {
+    bool empty;
 
-  {
-    ChannelHandle handle(*it->second);
-    count = handle->count();
-  }
-  // As channels_mutex should be locked when this function is run,
-  // it shouldn't be possible for the channel's own mutex to be locked
-  // from anywhere else, hence making it safe to delete the mutex:
-  if (count == 0)
-  {
-    delete it->second;
-    return channels.erase(it);
+    {
+      // Locked to synchronize with the last user's writes.
+      lock_guard<mutex> channel_lock(it->second->mutex());
+      empty = it->second->count() == 0;
+    }
+    if (empty)
+      return channels.erase(it);
   }
   return ++it;
 }

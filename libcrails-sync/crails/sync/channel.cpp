@@ -1,4 +1,5 @@
 #include "channel.hpp"
+#include <algorithm>
 #include <crails/logger.hpp>
 
 using namespace Crails::Sync;

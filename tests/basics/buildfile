@@ -1,0 +1,5 @@
+import libs += libcrails%lib{crails}
+import libs += libssl%lib{ssl}
+import libs += libcrails-sync%lib{crails-sync}
+
+exe{driver}: {hxx ixx txx cxx}{**} $libs testscript{**}

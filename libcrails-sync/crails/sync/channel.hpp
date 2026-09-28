@@ -2,12 +2,15 @@
 # define CRAILS_SYNC_CHANNEL_HPP
 
 # include <crails/websocket.hpp>
+# include <memory>
+# include <mutex>
+# include <list>
 
 namespace Crails
 {
   namespace Sync
   {
-    class Channel
+    class Channel : public std::enable_shared_from_this<Channel>
     {
       typedef Crails::WebSocket Listener;
     public:
@@ -31,14 +34,17 @@ namespace Crails
       std::string read_password, write_password;
     };
 
+    // Locks the channel for as long as the handle lives, and keeps the channel
+    // itself alive for as long as the handle lives.
     struct ChannelHandle
     {
-      ChannelHandle(Channel& channel) : channel(channel) { channel.mutex().lock(); }
+      ChannelHandle(std::shared_ptr<Channel> value) : channel(std::move(value)) { channel->mutex().lock(); }
+      ChannelHandle(Channel& value) : ChannelHandle(value.shared_from_this()) {}
       ChannelHandle(const ChannelHandle& copy) : channel(copy.channel) { copy.owner = false; }
-      ~ChannelHandle() { if (owner) channel.mutex().unlock(); }
-      Channel* operator->() { return &channel; }
+      ~ChannelHandle() { if (owner) channel->mutex().unlock(); } // unlock first, release the reference after
+      Channel* operator->() { return channel.get(); }
     private:
-      Channel& channel;
+      std::shared_ptr<Channel> channel;
       mutable bool owner = true;
     };
   }

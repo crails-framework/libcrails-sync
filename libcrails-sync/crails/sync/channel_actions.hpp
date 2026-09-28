@@ -27,20 +27,28 @@ namespace Crails
       {
         const HttpRequest& request      = context.connection->get_request();
         const std::string  channel_name = context.params["uri"];
-        ChannelHandle      channel(Channels::singleton::get()->require_unlocked_channel(channel_name));
+        Channels*          channels     = Channels::singleton::get();
+        bool               accepted     = false;
 
-        if (boost::beast::websocket::is_upgrade(request) && WebSocketType::acceptable(context, channel))
         {
-          auto  websocket = std::make_shared<WebSocketType>(context, channel_name);
+          ChannelHandle channel(channels->require_unlocked_channel(channel_name));
 
-          context.response.set_status_code(HttpStatus::switching_protocols);
-          websocket->accept(request);
-          websocket->read();
-          channel->add_listener(*websocket);
+          if (boost::beast::websocket::is_upgrade(request) && WebSocketType::acceptable(context, channel))
+          {
+            auto  websocket = std::make_shared<WebSocketType>(context, channel_name);
+
+            context.response.set_status_code(HttpStatus::switching_protocols);
+            websocket->accept(request);
+            websocket->read();
+            channel->add_listener(*websocket);
+            accepted = true;
+          }
+          else
+            context.response.set_status_code(HttpStatus::bad_request);
+          callback();
         }
-        else
-          context.response.set_status_code(HttpStatus::bad_request);
-        callback();
+        if (!accepted)
+          channels->cleanup(channel_name);
       }
     };
 

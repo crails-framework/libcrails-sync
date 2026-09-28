@@ -60,8 +60,9 @@ namespace Crails
     {
       typedef std::list<std::shared_ptr<IUpdate> > UpdateList;
     public:
-      void     set_channel(Channel& value) { channel = &value; }
-      Channel* get_channel() const { return channel; }
+      void     set_channel(Channel& value) { channel = value.shared_from_this(); }
+      void     set_channel(std::shared_ptr<Channel> value) { channel = std::move(value); }
+      Channel* get_channel() const { return channel.get(); }
 
       static Transaction& get();
       static bool is_enabled();
@@ -95,7 +96,7 @@ namespace Crails
       }
 
     private:
-      Channel* channel = nullptr;
+      std::shared_ptr<Channel> channel; // shared ownership: Channels::cleanup can't delete it under us
       UpdateList updates, removals;
     };
   }
