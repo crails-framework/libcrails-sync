@@ -24,6 +24,7 @@ namespace Crails
         static const std::string    hostname;
         static const unsigned short port;
         static const bool           ssl;
+        static const std::string    password; // authenticates this process to the server
       };
 
       Task(unsigned int task_count);

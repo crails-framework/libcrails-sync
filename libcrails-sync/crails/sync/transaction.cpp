@@ -1,5 +1,6 @@
 #include "transaction.hpp"
 #include <crails/logger.hpp>
+#include "remote.hpp"
 
 using namespace Crails;
 using namespace Crails::Sync;
@@ -18,9 +19,14 @@ bool Transaction::is_enabled()
   return Sync::enabled;
 }
 
+void Transaction::set_remote(const string& path)
+{
+  broadcaster = [path](const string& json) { post_to_server(path, json); };
+}
+
 void Transaction::commit()
 {
-  if (channel && updates.size() + removals.size() > 0)
+  if ((channel || broadcaster) && updates.size() + removals.size() > 0)
   {
     DataTree message;
     vector<string> removal_uids;
@@ -32,6 +38,9 @@ void Transaction::commit()
     message["removals"].from_vector<string>(removal_uids);
     if (on_commit)
       on_commit(message);
+    if (broadcaster)
+      broadcaster(message.to_json());
+    else
     {
       lock_guard<mutex> lock(channel->mutex());
 
@@ -40,7 +49,7 @@ void Transaction::commit()
     rollback();
     logger << Logger::Debug << "Crails::Sync::Transaction::commit: successfully broadcasted sync udpate" << Logger::endl;
   }
-  else if (!channel)
+  else if (!channel && !broadcaster)
     logger << Logger::Debug << "Crails::Sync::Transaction::commit: no channel specified" << Logger::endl;
   else
     logger << Logger::Debug << "Crails::Sync::Transaction::commit: nothing to commit" << Logger::endl;

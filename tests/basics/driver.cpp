@@ -22,6 +22,7 @@ using namespace std;
 const std::string    Sync::Task::Settings::hostname = "0.0.0.0";
 const unsigned short Sync::Task::Settings::port = 3001;
 const bool           Sync::Task::Settings::ssl = false;
+const std::string    Sync::Task::Settings::password = "1234";
 
 int driver()
 {

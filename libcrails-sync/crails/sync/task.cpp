@@ -1,7 +1,7 @@
 #include "task.hpp"
 #include "channels.hpp"
 #include <crails/utils/random_string.hpp>
-#include <crails/client.hpp>
+#include "remote.hpp"
 #include <crails/logger.hpp>
 
 using namespace Crails;
@@ -10,44 +10,14 @@ using namespace std;
 
 static std::string random_task_id() { return Crails::generate_random_string("abcdefghijklmnopqrstuvwxyz0123456789", 8); }
 
-template<typename CLIENT_TYPE>
-static void broadcast(const Crails::Client::Request& request)
-{
-  try
-  {
-    auto http = make_shared<CLIENT_TYPE>(Task::Settings::hostname, Task::Settings::port);
-
-    http->connect();
-    http->async_query(request, [http](const Crails::Client::Response&, boost::beast::error_code ec)
-    {
-      if (ec)
-        logger << Logger::Error << "Crails::Sync::Task: an error occured during a broadcast: " << ec.message() << Logger::endl;
-      else
-        logger << Logger::Debug << "Crails::Sync::Task: broadcasted progress update" << Logger::endl;
-    });
-  }
-  catch (const std::exception& error)
-  {
-    logger << Logger::Error << "Crails::Sync::Task: an error occured during a broadcast to " << Task::Settings::hostname << ':' << Task::Settings::port << ": " << error.what() << Logger::endl;
-  }
-}
-
 static void broadcast(Task& task)
 {
   if (!task.is_mute())
   {
-    Crails::Client::Request request{Crails::HttpVerb::post, '/' + task.uri(), 11};
     const string body = task.metadata.to_json();
 
     logger << Logger::Debug << "Crails::Sync::Task: notify on " << task.get_id() << ":\n" << body << Logger::endl;
-    request.set(Crails::HttpHeader::content_type, "application/json");
-    request.set(Crails::HttpHeader::connection, "close");
-    request.body() = body;
-    request.content_length(body.length());
-    if (Task::Settings::ssl)
-      broadcast<Crails::Ssl::Client>(request);
-    else
-      broadcast<Crails::Client>(request);
+    post_to_server('/' + task.uri(), body);
   }
 }
 

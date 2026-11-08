@@ -61,6 +61,7 @@ namespace Crails
       typedef std::list<std::shared_ptr<IUpdate> > UpdateList;
     public:
       std::function<void (DataTree&)> on_commit;
+      std::function<void (const std::string&)> broadcaster;
 
       void     set_channel(Channel& value) { channel = value.shared_from_this(); }
       void     set_channel(std::shared_ptr<Channel> value) { channel = std::move(value); }
@@ -70,11 +71,12 @@ namespace Crails
 
       void commit();
       void rollback();
+      void set_remote(const std::string& path);
 
       template<typename MODEL>
       void save(MODEL& model)
       {
-        if (is_enabled())
+        if (is_enabled() && (channel || broadcaster))
         {
           auto update = std::make_shared<Update<MODEL> >();
 
@@ -86,7 +88,7 @@ namespace Crails
       template<typename MODEL>
       void destroy(MODEL& model)
       {
-        if (is_enabled())
+        if (is_enabled() && (channel || broadcaster))
         {
           auto update = std::make_shared<Update<MODEL> >();
 
