@@ -60,13 +60,13 @@ namespace Crails
     {
       typedef std::list<std::shared_ptr<IUpdate> > UpdateList;
     public:
+      std::function<void (DataTree&)> on_commit;
+
       void     set_channel(Channel& value) { channel = value.shared_from_this(); }
       void     set_channel(std::shared_ptr<Channel> value) { channel = std::move(value); }
       Channel* get_channel() const { return channel.get(); }
 
-      static Transaction& get();
       static bool is_enabled();
-      static std::function<void (DataTree&)> on_commit;
 
       void commit();
       void rollback();

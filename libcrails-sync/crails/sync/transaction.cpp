@@ -10,14 +10,7 @@ namespace Crails
   namespace Sync
   {
     bool enabled = true;
-    function<void (DataTree&)> Transaction::on_commit;
   }
-}
-
-Transaction& Transaction::get()
-{
-  static thread_local Transaction transaction;
-  return transaction;
 }
 
 bool Transaction::is_enabled()

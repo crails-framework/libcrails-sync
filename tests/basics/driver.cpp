@@ -171,7 +171,7 @@ int driver()
   // A transaction keeps its channel alive
   {
     weak_ptr<Channel> weak;
-    auto& transaction = Transaction::get();
+    Crails::Sync::Transaction transaction;
 
     {
       auto channel = channels->require_unlocked_channel("cleanup-transaction");
