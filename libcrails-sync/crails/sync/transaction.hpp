@@ -35,15 +35,13 @@ namespace Crails
       {
         if (T::view != "")
         {
-          DataTree params;
           Crails::RenderString result;
           Crails::SharedVars vars;
 
-          params["headers"]["Accept"] = "application/json";
           vars["model"] = &object;
           try
           {
-            Crails::Renderer::render(T::view, params.as_data(), result, vars);
+            Crails::Renderer::render(T::view, "application/json", result, vars);
             data[uid()] = result.value();
             return ;
           }
